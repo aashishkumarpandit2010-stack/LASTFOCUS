@@ -37,7 +37,9 @@ jobs:
           PROJECT_DIR=$(dirname "$SETTINGS")
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
           echo "Found project at $PROJECT_DIR"
-
+           - name: Fix Java target
+         run: |
+          find "$PROJECT_DIR" -name "build.gradle" -type f -exec sed -i '/android {/a\    compileOptions {\n        sourceCompatibility JavaVersion.VERSION_17\n        targetCompatibility JavaVersion.VERSION_17\n    }' {} +
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
