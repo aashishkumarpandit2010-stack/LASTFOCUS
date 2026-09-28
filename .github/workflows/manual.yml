@@ -17,25 +17,34 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Set up Android
+        uses: android-actions/setup-android@v3
+
       - name: Extract Android project
         run: |
           mkdir project
           unzip -q FocusFlow_Android_Studio_Project.zip -d project
 
-      - name: Find Gradle project
+      - name: Find Android project
         run: |
-          GRADLEW=$(find project -name gradlew -type f | head -n 1)
-          if [ -z "$GRADLEW" ]; then
-            echo "gradlew not found"
+          SETTINGS=$(find project -name settings.gradle -o -name settings.gradle.kts | head -n 1)
+          if [ -z "$SETTINGS" ]; then
+            echo "Android project not found"
             exit 1
           fi
-          echo "GRADLEW=$GRADLEW" >> $GITHUB_ENV
+          PROJECT_DIR=$(dirname "$SETTINGS")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "Found project at $PROJECT_DIR"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
       - name: Build APK
         run: |
-          chmod +x "$GRADLEW"
-          cd "$(dirname "$GRADLEW")"
-          ./gradlew assembleDebug
+          cd "$PROJECT_DIR"
+          gradle assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
